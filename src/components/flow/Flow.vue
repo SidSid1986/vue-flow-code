@@ -113,7 +113,7 @@
         <Background
           :size="1.6"
           pattern-color="rgba(53,53,53,1.000)"
-          bgColor="rgba(38,38,38,1)"
+          bgColor="rgba(38,38,38,0.8)"
           :gap="16"
         />
         <!-- <MiniMap /> -->
@@ -182,6 +182,7 @@ import LineNodeStartTwo from "./LineNodeStartTwo.vue";
 import LineNodeStepOne from "./LineNodeStepOne.vue";
 import "@/styles/main.css";
 import "@vue-flow/core/dist/style.css";
+import { ElMessage } from "element-plus";
 import { processImage, steps } from "@/api/common";
 
 const emit = defineEmits(["changeTime"]);
@@ -487,28 +488,65 @@ const onDragOver = (event) => {
 // 创建连线时使用我们的自定义动画边;
 const onConnect = (connection) => {
   console.log(connection);
-  // 生成唯一ID
-  const edgeId = `edge-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  const sourceId = connection.source;
+  const targetId = connection.target;
 
-  addEdges({
-    ...connection,
-    id: edgeId,
-    type: "animated",
-    animated: true, // 这是我们的自定义边组件类型标识
-    // markerEnd: {
-    //   type: MarkerType.ArrowClosed, // 保持箭头
-    //   width: 20,
-    //   height: 20,
-    //   color: "#6b7280",
-    // },
-    data: {
-      startAnimation: false,
-      onAnimationStart: (value) => {
-        // 更新边数据，重置动画触发状态
-        updateEdgeData(edgeId, { startAnimation: value });
+  console.log(sourceId);
+  console.log(targetId);
+
+  const idToNodeMap = new Map(nodeOne.value.map((node) => [node.id, node]));
+  const sourceNode = idToNodeMap.get(sourceId);
+  const targetNode = idToNodeMap.get(targetId);
+
+  if (!sourceNode || !targetNode) {
+    console.warn(`连接失败：找不到节点`, { sourceId, targetId });
+    return false;
+  }
+
+  const sourceValidSource = sourceNode.data.validSource;
+  const targetValidTarget = targetNode.data.validTarget;
+
+  console.log(sourceValidSource);
+  console.log(targetValidTarget);
+
+  const isSourceAllowed = sourceValidSource === sourceId;
+  const isTargetAllowed = targetValidTarget === targetId;
+
+  if (isSourceAllowed && isTargetAllowed) {
+    console.log(` 允许连接：${sourceId} → ${targetId}`);
+    // 生成唯一ID
+    const edgeId = `edge-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+    addEdges({
+      ...connection,
+      id: edgeId,
+      type: "animated",
+      animated: true, // 这是我们的自定义边组件类型标识
+      // markerEnd: {
+      //   type: MarkerType.ArrowClosed, // 保持箭头
+      //   width: 20,
+      //   height: 20,
+      //   color: "#6b7280",
+      // },
+      data: {
+        startAnimation: false,
+        onAnimationStart: (value) => {
+          // 更新边数据，重置动画触发状态
+          updateEdgeData(edgeId, { startAnimation: value });
+        },
       },
-    },
-  });
+    });
+    return true; // 允许连接
+  } else {
+    console.warn(`  不允许连接：${sourceId} → ${targetId}`);
+
+    ElMessage({
+      message: "不允许链接，请重新检查",
+      type: "warning",
+    });
+
+    return false; // 阻止连接
+  }
 };
 
 const onConnectStart = ({ nodeId, handleType }) => {

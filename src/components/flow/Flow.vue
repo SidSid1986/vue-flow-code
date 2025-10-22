@@ -111,10 +111,10 @@
           :gap="16"
         /> -->
         <Background
-          :size="1.6"
-          pattern-color="rgba(53,53,53,1.000)"
-          bgColor="rgba(38,38,38,0.8)"
-          :gap="16"
+          variant="lines"
+          pattern-color="rgba(198,198,198,1.000)"
+          bgColor="rgba(0, 0, 0, 0.5)"
+          :gap="50"
         />
         <!-- <MiniMap /> -->
         <Controls
